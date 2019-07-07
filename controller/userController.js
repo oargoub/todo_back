@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 
 var { User } = require('../models/user');
@@ -31,31 +32,61 @@ router.post("/inscription", (req, res) => {
         telephone: data.telephone,
         motDePasse: mdpCrypte
     });
-    
+
     //3 -Isertion des données
     user.save().then(() => {
-       
+
         //4 -Envoi des données vers le FE
         res.status(200).send({ message: 'Utilisateur inscri avec succees' });
-        
+
     }).catch((e) => {
         //4 -Envoi des données vers le FE
-        res.status(400).send({ message: 'Erreur Insertion : '+e });
+        res.status(400).send({ message: 'Erreur Insertion ' });
     });
 
-    
+
 });
 
 router.post("/connexion", (req, res) => {
     //1 - récupération des données
     let data = req.body;
 
-    //2 -Création d'un objet du model user
-    //3 -Isertion des données
+    let email = data.email;
+    let password = data.motDePasse;
+    
+    //3 - rechecrhe des données DB
+    User.findOne({ email }).then((user) => {
+        if (!user) {
+            res.status(404).send({ message: 'Email incorrecte' });
+        }
+        
+        
+        let passTrue = bcrypt.compareSync(password, user.motDePasse);
+
+        if (!passTrue) {
+            res.status(404).send({ message: 'Mot de passe incorrecte' });
+        }
+
+        var token = jwt.sign({ idUser: user._id }, 'cle');
+
+
+        res.status(200).send({ 
+            token, 
+            message:'connexion success'
+        });
+
+
+    }).catch(
+        (e) => {
+            //4 -Envoi des données vers le FE
+            res.status(400).send({ message: 'Erreur Fetch '+e });
+        }
+    );
     //4 -Envoi des données vers le FE
-    res.send(data);
+
 
 });
+
 router.get("/profil", (req, res) => {
     //1 - récupération des données
     let data = req.body;

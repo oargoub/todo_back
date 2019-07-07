@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 const user = require('./controller/userController');
 const todo = require('./controller/todoController');
@@ -8,6 +9,7 @@ var port = 3000;
 var app = express();
 
 app.use(bodyParser.json());
+app.use(cors());
 
 app.use('/user',user);
 app.use('/todo',todo);
